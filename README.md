@@ -2,9 +2,9 @@
 Procedural planet generator with GUI
 
 # 1. Prerequisites
- libGL
- libGLEW 
- nanoGUI (provided in ./lib/ folder)
+libGL
+libGLEW 
+nanoGUI (provided in ./lib/ folder)
 
 # 2. Compilation:
  make
