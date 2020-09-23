@@ -19,3 +19,5 @@ https://github.com/sol-prog/Perlin_Noise
 Some implementations were inspired by learnopengl.com  
 Textures were taken from http://textures.com/  
 
+<img src="https://github.com/edikar/ProceduralPlanets/blob/master/images/earth.png" height="50%" width="50%">
+<img src="https://github.com/edikar/ProceduralPlanets/blob/master/images/rock.png" height="50%" width="50%">
