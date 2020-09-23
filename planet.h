@@ -51,12 +51,39 @@ public:
 	void toggleOcean(bool);
 	void toggleNormals(bool);
 	void toggleWireframe(bool);
-	int randomizePlanet(int, float, float);
+	int randomizePlanet(int);
 	void processInput(int,int);
-	void setNoiseFrequency(float);
-	void setNoiseAmplitude(float);
 	void setDetalization(int);
 	void setNoiseSeed(int);
+	void setHeightColor(int, vec3);
+	void setSteepnessThreshold(float);
+
+	//shape noise setters
+	void setShapeNoiseLayers(int);
+	void setShapeNoiseLacunarity(float);
+	void setShapeNoisePersistance(float);
+	void setShapeNoiseFrequency(float);
+	void setShapeNoiseAmplitude(float);
+	void setShapeNoiseOffset(float);
+
+	//ridge noise setters
+	void setRidgeNoiseLayers(int);
+	void setRidgeNoiseLacunarity(float);
+	void setRidgeNoisePersistance(float);
+	void setRidgeNoiseFrequency(float);
+	void setRidgeNoiseAmplitude(float);
+	void setRidgeNoiseVShift(float);
+	void setRidgeNoisePower(int);
+	void setRidgeNoiseOffset(float);
+
+	//detail noise setters
+	void setDetNoiseLayers(int);
+	void setDetNoiseLacunarity(float);
+	void setDetNoisePersistance(float);
+	void setDetNoiseFrequency(float);
+	void setDetNoiseAmplitude(float);
+	void setDetNoiseOffset(float);
+
 private:
 
 	//matrices
@@ -82,6 +109,9 @@ private:
 	unsigned int sphereVBO, sphereVAO, sphereEBO;
 	unsigned int oceanVBO, oceanVAO, oceanEBO;
 	unsigned int normalsVBO, normalsVAO;
+
+	unsigned int normalMap;
+
 	//controls
 	bool showNormals = 0;
 	bool showOcean = 1;
@@ -89,9 +119,36 @@ private:
 	//planet generation parameters
 	int  detalization;
 	int perlinSeed;
-	float noiseAmplitude;
-	float noiseFrequency;
 
+	// shape noise
+	int   shapeNoiseLayers;
+	float shapeNoiseAmplitude;
+	float shapeNoiseFrequency;
+	float shapeNoiseLacunarity;
+	float shapeNoisePersistance;
+	float shapeNoiseOffset;
+
+	// ridge noise
+	int   ridgeNoiseLayers;
+	float ridgeNoiseAmplitude;
+	float ridgeNoiseFrequency;
+	float ridgeNoiseLacunarity;
+	float ridgeNoisePersistance;
+	float ridgeNoiseVerticalShift;
+	int ridgeNoisePower;
+	float ridgeNoiseOffset;
+
+	// detalization noise
+	int detNoiseLayers;
+	float detNoiseAmplitude;
+	float detNoiseFrequency;
+	float detNoiseLacunarity;
+	float detNoisePersistance;
+	float detNoiseOffset;
+
+	//height colors
+	vec3 heightColors[5];
+	float steepnessThreshold;
 
 
 

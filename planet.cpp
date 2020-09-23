@@ -15,12 +15,15 @@
 #include "utils.h"
 #include "camera.h"
 //#include "model.h"
+#include "stb_image.h"
 
 #include "PerlinNoise.h"
 #include "planet.h"
 
 using namespace std;
 using namespace glm;
+
+unsigned int loadTexture(char const * path);
 
 
 void Planet::toggleNormals(bool state){
@@ -35,19 +38,114 @@ void Planet::toggleWireframe(bool state){
     showWireframe = state;   
 }
 
-void Planet::setNoiseFrequency(float frequency){
-    noiseFrequency = frequency;
-
-    initializePlanet();
-}
-
 void Planet::setDetalization(int detalization){
     this->detalization = detalization;
     initializePlanet();
 }
 
-void Planet::setNoiseAmplitude(float amplitude){
-    noiseAmplitude = amplitude;
+void Planet::setShapeNoiseLayers(int layers){
+    shapeNoiseLayers = layers;
+    initializePlanet();
+}
+
+void Planet::setShapeNoiseLacunarity(float lacunarity){
+    shapeNoiseLacunarity = lacunarity;
+    initializePlanet();
+}
+
+void Planet::setShapeNoisePersistance(float persistance){
+    shapeNoisePersistance = persistance;
+    initializePlanet();
+}
+
+void Planet::setShapeNoiseFrequency(float frequency){
+    shapeNoiseFrequency = frequency;
+    initializePlanet();
+}
+
+void Planet::setShapeNoiseAmplitude(float amplitude){
+    shapeNoiseAmplitude = amplitude;
+    initializePlanet();
+}
+
+void Planet::setShapeNoiseOffset(float offset){
+    shapeNoiseOffset = offset;
+    initializePlanet();
+}
+
+
+void Planet::setDetNoiseLayers(int layers){
+    detNoiseLayers = layers;
+    initializePlanet();
+}
+
+void Planet::setDetNoiseLacunarity(float lacunarity){
+    detNoiseLacunarity = lacunarity;
+    initializePlanet();
+}
+
+void Planet::setDetNoisePersistance(float persistance){
+    detNoisePersistance = persistance;
+    initializePlanet();
+}
+
+void Planet::setDetNoiseFrequency(float frequency){
+    detNoiseFrequency = frequency;
+    initializePlanet();
+}
+
+void Planet::setDetNoiseAmplitude(float amplitude){
+    detNoiseAmplitude = amplitude;
+    initializePlanet();
+}
+
+void Planet::setDetNoiseOffset(float offset){
+    detNoiseOffset = offset;
+    initializePlanet();
+}
+
+void Planet::setRidgeNoiseLayers(int layers){
+    ridgeNoiseLayers = layers;
+    initializePlanet();
+}
+
+void Planet::setRidgeNoiseLacunarity(float lacunarity){
+    ridgeNoiseLacunarity = lacunarity;
+    initializePlanet();
+}
+
+void Planet::setRidgeNoisePersistance(float persistance){
+    ridgeNoisePersistance = persistance;
+    initializePlanet();
+}
+
+void Planet::setRidgeNoiseFrequency(float frequency){
+    ridgeNoiseFrequency = frequency;
+    initializePlanet();
+}
+
+void Planet::setRidgeNoiseAmplitude(float amplitude){
+    ridgeNoiseAmplitude = amplitude;
+    initializePlanet();
+}
+
+void Planet::setRidgeNoiseVShift(float offset){
+    ridgeNoiseVerticalShift = offset;
+    initializePlanet();
+}
+
+void Planet::setRidgeNoisePower(int power){
+    ridgeNoisePower = power;
+    initializePlanet();
+}
+
+void Planet::setRidgeNoiseOffset(float offset){
+    ridgeNoiseOffset = offset;
+    initializePlanet();
+}
+
+void Planet::setHeightColor(int colNum, vec3 color){
+    heightColors[colNum] = color;
     initializePlanet();
 }
 
@@ -56,7 +154,12 @@ void Planet::setNoiseSeed(int seed){
     initializePlanet();
 }
 
-int Planet::randomizePlanet(int detalization, float frequency, float amplitude){
+void Planet::setSteepnessThreshold(float threshold){
+    steepnessThreshold = threshold;
+    initializePlanet();
+}
+
+int Planet::randomizePlanet(int detalization){
     //update random seed
     perlinSeed = rand()/10000 % 10000;
     printf("perlinSeed = %d\n", perlinSeed);
@@ -155,21 +258,60 @@ void Planet::applyNoise(){
         vec3 pos = vertices[v].position;
 
         float noise = 0;
-        float frequency = noiseFrequency;
-        float amplitude = noiseAmplitude;
+        float frequency = 0;
+        float amplitude = 0;
+        float totalNoise = 1;
 
-        //mountain ridge
- //       float ridgeNoise = amplitude*(1-(std::abs(2*(pn.noise(pos.x * frequency , pos.y * frequency , pos.z * frequency)-0.5f)))) - 0.2f;
 
-        for(int i = 0; i < 5; i++){
-            frequency *= 2;
-            amplitude *= 0.5f;
-            noise += amplitude * 2*((pn.noise(pos.x * frequency , pos.y * frequency , pos.z * frequency)-0.5f));            
+        /* Apply ridge Noise */
+        frequency = ridgeNoiseFrequency;
+        amplitude = ridgeNoiseAmplitude;
+        noise = 0;
+        /*for(int i = 0; i < ridgeNoiseLayers; i++){
+            //noise += std::pow(amplitude*(1-(std::abs(2*(pn.noise(pos.x * frequency + ridgeNoiseOffset , pos.y * frequency + ridgeNoiseOffset, pos.z * frequency + ridgeNoiseOffset)-0.5f)))),5);
+            noise += amplitude * pow((1- abs(2*((pn.noise(pos.x * frequency + ridgeNoiseOffset , pos.y * frequency + ridgeNoiseOffset, pos.z * frequency + ridgeNoiseOffset)-0.5f)))), ridgeNoiseVerticalShift);
+            
+        }*/
+
+        for(int i = 0; i < ridgeNoiseLayers; i++){
+            float tempNoise = amplitude * (1- abs(2*((pn.noise(pos.x * frequency + ridgeNoiseOffset , pos.y * frequency + ridgeNoiseOffset, pos.z * frequency + ridgeNoiseOffset)-0.5f))));
+            if(noise == 0) //in first iteration we can't multiply by 0
+                noise += tempNoise;
+            else
+                noise += noise * tempNoise;
+
+            frequency *= ridgeNoiseLacunarity;
+            amplitude *= ridgeNoisePersistance;
         }
 
-        noisedVertices[v].position = vertices[v].position * (1 + noise);
+        totalNoise += ridgeNoiseVerticalShift * pow(noise, ridgeNoisePower);
+
+        /* Apply Shape Noise */
+        frequency = shapeNoiseFrequency;
+        amplitude = shapeNoiseAmplitude;
+        noise = 0;
+        for(int i = 0; i < shapeNoiseLayers; i++){
+            //noise += amplitude * ((pn.noise(pos.x * frequency + shapeNoiseOffset , pos.y * frequency +shapeNoiseOffset, pos.z * frequency + shapeNoiseOffset)));
+            noise += amplitude * 2*((pn.noise(pos.x * frequency + shapeNoiseOffset , pos.y * frequency +shapeNoiseOffset, pos.z * frequency + shapeNoiseOffset)-0.5f));           
+            frequency *= shapeNoiseLacunarity;
+            amplitude *= shapeNoisePersistance;
+        }
+        totalNoise += noise;
+
+        /* Apply Detail Noise */
+        
+        frequency = detNoiseFrequency;
+        amplitude = detNoiseAmplitude;
+        noise = 0;
+        for(int i = 0; i < detNoiseLayers; i++){
+            noise += amplitude * 2*((pn.noise(pos.x * frequency + detNoiseOffset , pos.y * frequency +detNoiseOffset, pos.z * frequency + detNoiseOffset)-0.5f));            
+            frequency *= detNoiseLacunarity;
+            amplitude *= detNoisePersistance;
+        }
+        totalNoise += noise;
+
+        noisedVertices[v].position = vertices[v].position * (totalNoise);
         noisedVertices[v].normal = normalize(noisedVertices[v].position);
-        //noisedVertices[v].normal = normalize(c1);
         
         //make some waves in the ocean
         frequency = 40.0f;
@@ -372,6 +514,14 @@ void Planet::drawPlanet(){
         planetShader->setMat4("projection", projection);
         planetShader->setMat4("normalMat", normalMat);
 
+        planetShader->setVec3("color1", heightColors[0]);
+        planetShader->setVec3("color2", heightColors[1]);
+        planetShader->setVec3("color3", heightColors[2]);
+        planetShader->setVec3("color4", heightColors[3]);
+        planetShader->setVec3("color5", heightColors[4]);
+
+        planetShader->setFloat("steepnessThreshold", steepnessThreshold);
+
         glBindVertexArray(sphereVAO);
         glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
         //glBufferData(GL_ARRAY_BUFFER, NUM_VERTICES * sizeof(NOISED_VERTEX), noisedVertices, GL_DYNAMIC_DRAW);
@@ -423,6 +573,8 @@ void Planet::planetDraw(){
     lastFrame = currentFrame;
 
     setupDrawParameters();
+
+    //glBindTexture(GL_TEXTURE_2D, normalMap);  
 
     glClearColor(0.7f, 0.7f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -509,6 +661,8 @@ Planet::Planet() {
     oceanShader =  new Shader("shaders/oceanShader.vs", "shaders/oceanShader.fs"/*, "shaders/planetShader2.gs"*/);
     normalsShader = new Shader("shaders/normalsShader.vs", "shaders/normalsShader.fs"/*, "shaders/planetShader2.gs"*/);
 
+    //normalMap = loadTexture("images/planetNormalMap.png");
+
     camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
     lightPos = vec3(0.0f, 0.0f, 8.0f);
 
@@ -516,7 +670,78 @@ Planet::Planet() {
     printf("perlinSeed = %d\n", perlinSeed);
 
     detalization = 5;
-    noiseFrequency = 1.0f;
-    noiseAmplitude = 0.6f;
+
+    shapeNoiseLayers = 0;
+    shapeNoiseLacunarity = 1.0f;
+    shapeNoisePersistance = 1.0f;
+    shapeNoiseFrequency = 0.7f;
+    shapeNoiseAmplitude = 0.5f;
+    shapeNoiseOffset = 0.0f;
+
+    ridgeNoiseLayers = 0;
+    ridgeNoiseLacunarity = 2.0f;
+    ridgeNoisePersistance = 0.05f;
+    ridgeNoiseFrequency = 1.0f;
+    ridgeNoiseAmplitude = 0.7f;
+    ridgeNoiseVerticalShift = 2.0f;
+    ridgeNoisePower = 10;
+    ridgeNoiseOffset = 0.0f;
+
+    detNoiseLayers = 5;
+    detNoiseLacunarity = 2.0f;
+    detNoisePersistance = 0.5f;
+    detNoiseFrequency = 1.0f;
+    detNoiseAmplitude = 0.3f;
+    detNoiseOffset = 0.0f;
+
+    heightColors[0] = vec3(0, 0, 0.1f);
+    heightColors[1] = vec3(0.6, 0.6, 0.1f);
+    heightColors[2] = vec3(0.1, 0.5, 0.1f);
+    heightColors[3] = vec3(0.5, 0.2, 0.0f);
+    heightColors[4] = vec3(1.0, 1.0, 1.0f);
+
+    steepnessThreshold = 0.9f;
     initializePlanet();
+}
+
+
+
+
+// utility function for loading a 2D texture from file
+// ---------------------------------------------------
+unsigned int loadTexture(char const * path)
+{
+    unsigned int textureID;
+    glGenTextures(1, &textureID);
+
+    int width, height, nrComponents;
+    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
+    if (data)
+    {
+        GLenum format;
+        if (nrComponents == 1)
+            format = GL_RED;
+        else if (nrComponents == 3)
+            format = GL_RGB;
+        else if (nrComponents == 4)
+            format = GL_RGBA;
+
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        stbi_image_free(data);
+    }
+    else
+    {
+        std::cout << "Texture failed to load at path: " << path << std::endl;
+        stbi_image_free(data);
+    }
+
+    return textureID;
 }
