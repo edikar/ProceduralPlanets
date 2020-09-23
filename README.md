@@ -17,5 +17,7 @@ nanoGUI (provided in ./lib/ folder)
  ./ProceduralPlanets
 
 # 4. External sources
+perlin noise was taking from the following proect as is:
 https://github.com/sol-prog/Perlin_Noise
+some implementations were inspired by learnopengl.com
 
