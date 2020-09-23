@@ -17,4 +17,5 @@ nanoGUI (provided in ./lib/ folder)
 perlin noise was taking from the following proect as is:  
 https://github.com/sol-prog/Perlin_Noise  
 Some implementations were inspired by learnopengl.com  
+Textures were taken from http://textures.com/  
 
