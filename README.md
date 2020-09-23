@@ -18,6 +18,6 @@ nanoGUI (provided in ./lib/ folder)
 
 # 4. External sources
 perlin noise was taking from the following proect as is:
-https://github.com/sol-prog/Perlin_Noise
-some implementations were inspired by learnopengl.com
+https://github.com/sol-prog/Perlin_Noise 
+Some implementations were inspired by learnopengl.com
 
