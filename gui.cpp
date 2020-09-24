@@ -620,12 +620,12 @@ private:
         CP2->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(2, vec3(c.r(), c.g(), c.b())); });
 
         new Label(window, "Color 3 :", "sans-bold");
-        auto CP3 = new ColorPicker(window, Color(0.5f, 0.2f, 0.0f, 1.0f));
+        auto CP3 = new ColorPicker(window, Color(1.0f, 1.0f, 1.0f, 1.0f));
         CP3->setFixedSize({100, 20});
         CP3->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(3, vec3(c.r(), c.g(), c.b())); });
 
         new Label(window, "Color 4 (*rocks):", "sans-bold");
-        auto CP4 = new ColorPicker(window, Color(1.0f, 1.0f, 1.0f, 1.0f));
+        auto CP4 = new ColorPicker(window, Color(0.5f, 0.2f, 0.0f, 1.0f));
         CP4->setFixedSize({100, 20});
         CP4->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(4, vec3(c.r(), c.g(), c.b())); });
 

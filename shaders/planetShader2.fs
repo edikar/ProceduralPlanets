@@ -87,7 +87,7 @@ void main()
 	float steepness = dot(normal, nfp);
 	float len = length(FragPos) * length(FragPos);
 
-	float interpolationValue = smoothstep(steepnessThreshold - rockBlendingFactor, steepnessThreshold + rockBlendingFactor, steepness);
+	float interpolationValue = smoothstep(clamp(steepnessThreshold - rockBlendingFactor, 0, 1), clamp(steepnessThreshold + rockBlendingFactor, 0, 1), steepness);
 	
  	finalColor += (len <= 0.9) ? color0 * len : vec3(0.0); 					//bottom
 
