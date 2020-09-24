@@ -41,7 +41,6 @@
 #include <string>
 
 
-
 using std::cout;
 using std::cerr;
 using std::endl;
@@ -164,6 +163,14 @@ public:
     }
     void setSteepnessThreshold(float value){
         planet->setSteepnessThreshold(value);
+    }
+
+    void setRockBlendingFactor(float value){
+        planet->setRockBlendingFactor(value);
+    }
+
+    void setNormalMapScale(float value){
+        planet->setNormalMapScale(value);
     }
 
 private:
@@ -612,12 +619,12 @@ private:
         CP2->setFixedSize({100, 20});
         CP2->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(2, vec3(c.r(), c.g(), c.b())); });
 
-        new Label(window, "Color 3 *:", "sans-bold");
+        new Label(window, "Color 3 :", "sans-bold");
         auto CP3 = new ColorPicker(window, Color(0.5f, 0.2f, 0.0f, 1.0f));
         CP3->setFixedSize({100, 20});
         CP3->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(3, vec3(c.r(), c.g(), c.b())); });
 
-        new Label(window, "Color 4:", "sans-bold");
+        new Label(window, "Color 4 (*rocks):", "sans-bold");
         auto CP4 = new ColorPicker(window, Color(1.0f, 1.0f, 1.0f, 1.0f));
         CP4->setFixedSize({100, 20});
         CP4->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(4, vec3(c.r(), c.g(), c.b())); });
@@ -638,8 +645,42 @@ private:
         steepnesFB->setMaxValue(1);
         steepnesFB->setValueIncrement(0.01f);
         steepnesFB->setCallback([this](float value) { mCanvas->setSteepnessThreshold(value); return true; });    
-        
-        
+
+        /* rock blending factor */ 
+        new Label(window, "rock blending factor:", "sans");
+        auto rockBlendFactorFB = new FloatBox<float>(window);
+        rockBlendFactorFB->setEditable(true);
+        rockBlendFactorFB->setFixedSize(Vector2i(70, 20));
+        rockBlendFactorFB->setValue(0.04f);
+        rockBlendFactorFB->setUnits("uf");
+        rockBlendFactorFB->setDefaultValue("0.04");
+        rockBlendFactorFB->setFontSize(16);
+        rockBlendFactorFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        rockBlendFactorFB->setFormat("[0-9]*\\.?[0-9]+");
+        rockBlendFactorFB->setSpinnable(true);
+        rockBlendFactorFB->setMinValue(0);
+        rockBlendFactorFB->setMaxValue(1);
+        rockBlendFactorFB->setValueIncrement(0.01f);
+        rockBlendFactorFB->setCallback([this](float value) { mCanvas->setRockBlendingFactor(value); return true; });    
+
+        /* normal map scale */ 
+        new Label(window, "nMap scale factor:", "sans");
+        auto nMapScaleFactorFB = new FloatBox<float>(window);
+        nMapScaleFactorFB->setEditable(true);
+        nMapScaleFactorFB->setFixedSize(Vector2i(70, 20));
+        nMapScaleFactorFB->setValue(1.0f);
+        nMapScaleFactorFB->setUnits("uf");
+        nMapScaleFactorFB->setDefaultValue("1.0");
+        nMapScaleFactorFB->setFontSize(16);
+        nMapScaleFactorFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        nMapScaleFactorFB->setFormat("[0-9]*\\.?[0-9]+");
+        nMapScaleFactorFB->setSpinnable(true);
+        nMapScaleFactorFB->setMinValue(0);
+        //nMapScaleFactorFB->setMaxValue(1);
+        nMapScaleFactorFB->setValueIncrement(0.1f);
+        nMapScaleFactorFB->setCallback([this](float value) { mCanvas->setNormalMapScale(value); return true; });    
+
+
         Button *btn = new Button(window, "RandomizeColors");
         btn->setCallback([this, CP0, CP1, CP2, CP3, CP4]() { 
             Color c;
@@ -660,6 +701,14 @@ private:
             mCanvas->setHeightColor(4, vec3(c.r(), c.g(), c.b()));
             
         });
+
+
+
+
+
+
+
+
 
     }
     void createGLCanvas() {

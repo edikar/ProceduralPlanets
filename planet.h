@@ -57,6 +57,8 @@ public:
 	void setNoiseSeed(int);
 	void setHeightColor(int, vec3);
 	void setSteepnessThreshold(float);
+	void setRockBlendingFactor(float);
+	void setNormalMapScale(float);
 
 	//shape noise setters
 	void setShapeNoiseLayers(int);
@@ -149,8 +151,8 @@ private:
 	//height colors
 	vec3 heightColors[5];
 	float steepnessThreshold;
-
-
+	float rockBlendingFactor;
+	float normalMapScale;
 
 	//These are temporary pointers for planet generations - probalby should not be here...
 	VERTEX *vertices;

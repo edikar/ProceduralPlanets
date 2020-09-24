@@ -14,13 +14,14 @@ layout (location = 1) in vec3 aNormal;
 /* Out attributes */
 out vec3 FragPos;  
 out vec3 Normal;
+out vec3 origFrag;
 
 void main()
 {
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     //Save the fragment position in world space
     FragPos = vec3(model * vec4(aPos, 1.0));
-
+    origFrag = aPos;
     //transform the normals with normal matrix (transpose inverse of model matrix)
     //inverse is a costly operation! it should be done on the CPU and passed as a uniform!!!
     //Normal = mat3(transpose(inverse(model))) * aNormal;

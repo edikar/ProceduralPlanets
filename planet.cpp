@@ -38,109 +38,109 @@ void Planet::toggleWireframe(bool state){
     showWireframe = state;   
 }
 
-void Planet::setDetalization(int detalization){
-    this->detalization = detalization;
+void Planet::setDetalization(int value){
+    detalization = value;
     initializePlanet();
 }
 
-void Planet::setShapeNoiseLayers(int layers){
-    shapeNoiseLayers = layers;
+void Planet::setShapeNoiseLayers(int value){
+    shapeNoiseLayers = value;
     initializePlanet();
 }
 
-void Planet::setShapeNoiseLacunarity(float lacunarity){
-    shapeNoiseLacunarity = lacunarity;
+void Planet::setShapeNoiseLacunarity(float value){
+    shapeNoiseLacunarity = value;
     initializePlanet();
 }
 
-void Planet::setShapeNoisePersistance(float persistance){
-    shapeNoisePersistance = persistance;
+void Planet::setShapeNoisePersistance(float value){
+    shapeNoisePersistance = value;
     initializePlanet();
 }
 
-void Planet::setShapeNoiseFrequency(float frequency){
-    shapeNoiseFrequency = frequency;
+void Planet::setShapeNoiseFrequency(float value){
+    shapeNoiseFrequency = value;
     initializePlanet();
 }
 
-void Planet::setShapeNoiseAmplitude(float amplitude){
-    shapeNoiseAmplitude = amplitude;
+void Planet::setShapeNoiseAmplitude(float value){
+    shapeNoiseAmplitude = value;
     initializePlanet();
 }
 
-void Planet::setShapeNoiseOffset(float offset){
-    shapeNoiseOffset = offset;
+void Planet::setShapeNoiseOffset(float value){
+    shapeNoiseOffset = value;
     initializePlanet();
 }
 
 
-void Planet::setDetNoiseLayers(int layers){
-    detNoiseLayers = layers;
+void Planet::setDetNoiseLayers(int value){
+    detNoiseLayers = value;
     initializePlanet();
 }
 
-void Planet::setDetNoiseLacunarity(float lacunarity){
-    detNoiseLacunarity = lacunarity;
+void Planet::setDetNoiseLacunarity(float value){
+    detNoiseLacunarity = value;
     initializePlanet();
 }
 
-void Planet::setDetNoisePersistance(float persistance){
-    detNoisePersistance = persistance;
+void Planet::setDetNoisePersistance(float value){
+    detNoisePersistance = value;
     initializePlanet();
 }
 
-void Planet::setDetNoiseFrequency(float frequency){
-    detNoiseFrequency = frequency;
+void Planet::setDetNoiseFrequency(float value){
+    detNoiseFrequency = value;
     initializePlanet();
 }
 
-void Planet::setDetNoiseAmplitude(float amplitude){
-    detNoiseAmplitude = amplitude;
+void Planet::setDetNoiseAmplitude(float value){
+    detNoiseAmplitude = value;
     initializePlanet();
 }
 
-void Planet::setDetNoiseOffset(float offset){
-    detNoiseOffset = offset;
+void Planet::setDetNoiseOffset(float value){
+    detNoiseOffset = value;
     initializePlanet();
 }
 
-void Planet::setRidgeNoiseLayers(int layers){
-    ridgeNoiseLayers = layers;
+void Planet::setRidgeNoiseLayers(int value){
+    ridgeNoiseLayers = value;
     initializePlanet();
 }
 
-void Planet::setRidgeNoiseLacunarity(float lacunarity){
-    ridgeNoiseLacunarity = lacunarity;
+void Planet::setRidgeNoiseLacunarity(float value){
+    ridgeNoiseLacunarity = value;
     initializePlanet();
 }
 
-void Planet::setRidgeNoisePersistance(float persistance){
-    ridgeNoisePersistance = persistance;
+void Planet::setRidgeNoisePersistance(float value){
+    ridgeNoisePersistance = value;
     initializePlanet();
 }
 
-void Planet::setRidgeNoiseFrequency(float frequency){
-    ridgeNoiseFrequency = frequency;
+void Planet::setRidgeNoiseFrequency(float value){
+    ridgeNoiseFrequency = value;
     initializePlanet();
 }
 
-void Planet::setRidgeNoiseAmplitude(float amplitude){
-    ridgeNoiseAmplitude = amplitude;
+void Planet::setRidgeNoiseAmplitude(float value){
+    ridgeNoiseAmplitude = value;
     initializePlanet();
 }
 
-void Planet::setRidgeNoiseVShift(float offset){
-    ridgeNoiseVerticalShift = offset;
+void Planet::setRidgeNoiseVShift(float value){
+    ridgeNoiseVerticalShift = value;
     initializePlanet();
 }
 
-void Planet::setRidgeNoisePower(int power){
-    ridgeNoisePower = power;
+void Planet::setRidgeNoisePower(int value){
+    ridgeNoisePower = value;
     initializePlanet();
 }
 
-void Planet::setRidgeNoiseOffset(float offset){
-    ridgeNoiseOffset = offset;
+void Planet::setRidgeNoiseOffset(float value){
+    ridgeNoiseOffset = value;
     initializePlanet();
 }
 
@@ -149,13 +149,23 @@ void Planet::setHeightColor(int colNum, vec3 color){
     initializePlanet();
 }
 
-void Planet::setNoiseSeed(int seed){
-    perlinSeed = seed;
+void Planet::setNoiseSeed(int value){
+    perlinSeed = value;
     initializePlanet();
 }
 
-void Planet::setSteepnessThreshold(float threshold){
-    steepnessThreshold = threshold;
+void Planet::setSteepnessThreshold(float value){
+    steepnessThreshold = value;
+    initializePlanet();
+}
+
+void Planet::setRockBlendingFactor(float value){
+    rockBlendingFactor = value;
+    initializePlanet();
+}
+
+void Planet::setNormalMapScale(float value){
+    normalMapScale = value;
     initializePlanet();
 }
 
@@ -514,18 +524,18 @@ void Planet::drawPlanet(){
         planetShader->setMat4("projection", projection);
         planetShader->setMat4("normalMat", normalMat);
 
-        planetShader->setVec3("color1", heightColors[0]);
-        planetShader->setVec3("color2", heightColors[1]);
-        planetShader->setVec3("color3", heightColors[2]);
-        planetShader->setVec3("color4", heightColors[3]);
-        planetShader->setVec3("color5", heightColors[4]);
+        planetShader->setVec3("color0", heightColors[0]);
+        planetShader->setVec3("color1", heightColors[1]);
+        planetShader->setVec3("color2", heightColors[2]);
+        planetShader->setVec3("color3", heightColors[3]);
+        planetShader->setVec3("color4", heightColors[4]);
 
         planetShader->setFloat("steepnessThreshold", steepnessThreshold);
+        planetShader->setFloat("rockBlendingFactor", rockBlendingFactor);
+        planetShader->setFloat("normalMapScale", normalMapScale);
 
         glBindVertexArray(sphereVAO);
         glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-        //glBufferData(GL_ARRAY_BUFFER, NUM_VERTICES * sizeof(NOISED_VERTEX), noisedVertices, GL_DYNAMIC_DRAW);
-    //    glDrawArrays(GL_TRIANGLES, 0, numTriangles);
         glDrawElements(GL_TRIANGLES, NUM_FACES * sizeof(FACE), GL_UNSIGNED_INT, 0);
 
 }
@@ -573,8 +583,9 @@ void Planet::planetDraw(){
     lastFrame = currentFrame;
 
     setupDrawParameters();
-
-    //glBindTexture(GL_TEXTURE_2D, normalMap);  
+    
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, normalMap);  
 
     glClearColor(0.7f, 0.7f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -584,7 +595,7 @@ void Planet::planetDraw(){
     //lightPos = lightPosTransform * glm::vec4(lightPos,1.0f);
 
     //create model, view and projection matrices
-    model = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/5, glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/10, glm::vec3(0.0f, 1.0f, 0.0f));
     view = camera->GetViewMatrix();
     projection = glm::perspective(glm::radians(camera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
     normalMat = glm::transpose(glm::inverse(model));
@@ -662,6 +673,8 @@ Planet::Planet() {
     normalsShader = new Shader("shaders/normalsShader.vs", "shaders/normalsShader.fs"/*, "shaders/planetShader2.gs"*/);
 
     //normalMap = loadTexture("images/planetNormalMap.png");
+    normalMap = loadTexture("images/planetNormalMap_s.jpg");
+    //normalMap = loadTexture("images/nums.png");
 
     camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));
     lightPos = vec3(0.0f, 0.0f, 8.0f);
@@ -697,10 +710,13 @@ Planet::Planet() {
     heightColors[0] = vec3(0, 0, 0.1f);
     heightColors[1] = vec3(0.6, 0.6, 0.1f);
     heightColors[2] = vec3(0.1, 0.5, 0.1f);
-    heightColors[3] = vec3(0.5, 0.2, 0.0f);
-    heightColors[4] = vec3(1.0, 1.0, 1.0f);
+    heightColors[3] = vec3(1.0, 1.0, 1.0f);
+    heightColors[4] = vec3(0.5, 0.2, 0.0f);
 
     steepnessThreshold = 0.9f;
+    rockBlendingFactor = 0.04f;
+    normalMapScale = 1.0f;
+
     initializePlanet();
 }
 
