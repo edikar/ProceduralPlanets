@@ -158,9 +158,16 @@ public:
         planet->setRidgeNoiseOffset(value);
     }
 
-    void setHeightColor(int colNum, vec3 color){
-        planet->setHeightColor(colNum, color);
+    void setColor(int colNum, vec3 color){
+        planet->setColor(colNum, color);
     }
+    void setColorHeight(int colNum, float height){
+        planet->setColorHeight(colNum, height);
+    }
+    void setColorBlendingRange(int colNum, float range){
+        planet->setColorBlendingRange(colNum, range);
+    }
+
     void setSteepnessThreshold(float value){
         planet->setSteepnessThreshold(value);
     }
@@ -176,6 +183,19 @@ public:
     void setViewport(unsigned int vx, unsigned int vy){
         planet->setViewport(vx,vy);
     }
+
+    void setPostProcKernel(float m00, float m01, float m02, float m10, float m11, float m12, float m20, float m21, float m22){
+        planet->setPostProcKernel(
+            m00, m01, m02,
+            m10, m11, m12,
+            m20, m21, m22
+            );
+    }
+
+    void togglePostProc(bool state){
+        planet->togglePostProc(state);
+    }
+
 private:
     Planet *planet;
 };
@@ -604,37 +624,171 @@ private:
     void createColorsWindow() {
 
         Widget *window = new Window(this, "Color Picker");
-        window->setPosition(Vector2i(10, 735));
-        window->setLayout(new GridLayout(Orientation::Horizontal, 2 , Alignment::Minimum, 0, 5));
+        window->setPosition(Vector2i(10, 650));
+        window->setLayout(new GridLayout(Orientation::Horizontal, 1 , Alignment::Minimum, 0, 5));
 
-        new Label(window, "Color 0:", "sans-bold");
-        auto CP0 = new ColorPicker(window, Color(0.0f, 0.0f, 0.1f, 1.0f));
+
+        Widget *colorsWidget = new Widget(window);
+        colorsWidget->setLayout(new GridLayout(Orientation::Horizontal, 4 , Alignment::Minimum, 0, 5));
+        new Label(colorsWidget, "| Color |", "sans-bold");
+        new Label(colorsWidget, "| ColorValue |", "sans-bold");
+        new Label(colorsWidget, "| StartHeight |", "sans-bold");
+        new Label(colorsWidget, "| BlendingRange |", "sans-bold");
+
+        new Label(colorsWidget, "Color 0:", "sans-bold");
+        auto CP0 = new ColorPicker(colorsWidget, Color(0.0f, 0.0f, 0.1f, 1.0f));
         CP0->setFixedSize({100, 20});
-        CP0->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(0, vec3(c.r(), c.g(), c.b()));  printf("%f %f %f\n", c.r(), c.g(), c.b()); });
+        CP0->setFinalCallback([this](const Color &c) { mCanvas->setColor(0, vec3(c.r(), c.g(), c.b()));  printf("%f %f %f\n", c.r(), c.g(), c.b()); });
 
-        new Label(window, "Color 1:", "sans-bold");
-        auto CP1 = new ColorPicker(window, Color(0.6f, 0.6f, 0.1f, 1.0f));
+        auto C0_heightFB = new FloatBox<float>(colorsWidget);
+        C0_heightFB->setEditable(true);
+        C0_heightFB->setFixedSize(Vector2i(70, 20));
+        C0_heightFB->setValue(0.0f);
+        C0_heightFB->setUnits("uf");
+        C0_heightFB->setDefaultValue("0.0");
+        C0_heightFB->setFontSize(16);
+        C0_heightFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        C0_heightFB->setFormat("[0-9]*\\.?[0-9]+");
+        C0_heightFB->setSpinnable(true);
+        C0_heightFB->setMinValue(0);
+        C0_heightFB->setValueIncrement(0.01f);
+        C0_heightFB->setCallback([this](float value) { mCanvas->setColorHeight(0, value); return true; }); 
+        new Label(colorsWidget, " ", "sans-bold"); //dummy
+
+        new Label(colorsWidget, "Color 1:", "sans-bold");
+        auto CP1 = new ColorPicker(colorsWidget, Color(0.6f, 0.6f, 0.1f, 1.0f));
         CP1->setFixedSize({100, 20});
-        CP1->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(1, vec3(c.r(), c.g(), c.b())); });
+        CP1->setFinalCallback([this](const Color &c) { mCanvas->setColor(1, vec3(c.r(), c.g(), c.b())); });
 
-        new Label(window, "Color 2:", "sans-bold");
-        auto CP2 = new ColorPicker(window, Color(0.1f, 0.5f, 0.1f, 1.0f));
+        auto C1_heightFB = new FloatBox<float>(colorsWidget);
+        C1_heightFB->setEditable(true);
+        C1_heightFB->setFixedSize(Vector2i(70, 20));
+        C1_heightFB->setValue(0.9f);
+        C1_heightFB->setUnits("uf");
+        C1_heightFB->setDefaultValue("0.9");
+        C1_heightFB->setFontSize(16);
+        C1_heightFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        C1_heightFB->setFormat("[0-9]*\\.?[0-9]+");
+        C1_heightFB->setSpinnable(true);
+        C1_heightFB->setMinValue(0);
+        C1_heightFB->setValueIncrement(0.01f);
+        C1_heightFB->setCallback([this](float value) { mCanvas->setColorHeight(1, value); return true; }); 
+
+        auto C1_blendingRangeFB = new FloatBox<float>(colorsWidget);
+        C1_blendingRangeFB->setEditable(true);
+        C1_blendingRangeFB->setFixedSize(Vector2i(70, 20));
+        C1_blendingRangeFB->setValue(0.03f);
+        C1_blendingRangeFB->setUnits("uf");
+        C1_blendingRangeFB->setDefaultValue("0.03");
+        C1_blendingRangeFB->setFontSize(16);
+        C1_blendingRangeFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        C1_blendingRangeFB->setFormat("[0-9]*\\.?[0-9]+");
+        C1_blendingRangeFB->setSpinnable(true);
+        C1_blendingRangeFB->setMinValue(0);
+        C1_blendingRangeFB->setValueIncrement(0.01f);
+        C1_blendingRangeFB->setCallback([this](float value) { mCanvas->setColorBlendingRange(1, value); return true; }); 
+
+        new Label(colorsWidget, "Color 2:", "sans-bold");
+        auto CP2 = new ColorPicker(colorsWidget, Color(0.1f, 0.5f, 0.1f, 1.0f));
         CP2->setFixedSize({100, 20});
-        CP2->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(2, vec3(c.r(), c.g(), c.b())); });
+        CP2->setFinalCallback([this](const Color &c) { mCanvas->setColor(2, vec3(c.r(), c.g(), c.b())); });
 
-        new Label(window, "Color 3 :", "sans-bold");
-        auto CP3 = new ColorPicker(window, Color(1.0f, 1.0f, 1.0f, 1.0f));
+        auto C2_heightFB = new FloatBox<float>(colorsWidget);
+        C2_heightFB->setEditable(true);
+        C2_heightFB->setFixedSize(Vector2i(70, 20));
+        C2_heightFB->setValue(1.05f);
+        C2_heightFB->setUnits("uf");
+        C2_heightFB->setDefaultValue("1.05");
+        C2_heightFB->setFontSize(16);
+        C2_heightFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        C2_heightFB->setFormat("[0-9]*\\.?[0-9]+");
+        C2_heightFB->setSpinnable(true);
+        C2_heightFB->setMinValue(0);
+        C2_heightFB->setValueIncrement(0.01f);
+        C2_heightFB->setCallback([this](float value) { mCanvas->setColorHeight(2, value); return true; }); 
+
+        auto C2_blendingRangeFB = new FloatBox<float>(colorsWidget);
+        C2_blendingRangeFB->setEditable(true);
+        C2_blendingRangeFB->setFixedSize(Vector2i(70, 20));
+        C2_blendingRangeFB->setValue(0.03f);
+        C2_blendingRangeFB->setUnits("uf");
+        C2_blendingRangeFB->setDefaultValue("0.03");
+        C2_blendingRangeFB->setFontSize(16);
+        C2_blendingRangeFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        C2_blendingRangeFB->setFormat("[0-9]*\\.?[0-9]+");
+        C2_blendingRangeFB->setSpinnable(true);
+        C2_blendingRangeFB->setMinValue(0);
+        C2_blendingRangeFB->setValueIncrement(0.01f);
+        C2_blendingRangeFB->setCallback([this](float value) { mCanvas->setColorBlendingRange(2, value); return true; }); 
+
+        new Label(colorsWidget, "Color 3 :", "sans-bold");
+        auto CP3 = new ColorPicker(colorsWidget, Color(1.0f, 1.0f, 1.0f, 1.0f));
         CP3->setFixedSize({100, 20});
-        CP3->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(3, vec3(c.r(), c.g(), c.b())); });
+        CP3->setFinalCallback([this](const Color &c) { mCanvas->setColor(3, vec3(c.r(), c.g(), c.b())); });
 
-        new Label(window, "Color 4 (*rocks):", "sans-bold");
-        auto CP4 = new ColorPicker(window, Color(0.5f, 0.2f, 0.0f, 1.0f));
+        auto C3_heightFB = new FloatBox<float>(colorsWidget);
+        C3_heightFB->setEditable(true);
+        C3_heightFB->setFixedSize(Vector2i(70, 20));
+        C3_heightFB->setValue(1.2f);
+        C3_heightFB->setUnits("uf");
+        C3_heightFB->setDefaultValue("1.2");
+        C3_heightFB->setFontSize(16);
+        C3_heightFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        C3_heightFB->setFormat("[0-9]*\\.?[0-9]+");
+        C3_heightFB->setSpinnable(true);
+        C3_heightFB->setMinValue(0);
+        C3_heightFB->setValueIncrement(0.01f);
+        C3_heightFB->setCallback([this](float value) { mCanvas->setColorHeight(3, value); return true; }); 
+
+        auto C3_blendingRangeFB = new FloatBox<float>(colorsWidget);
+        C3_blendingRangeFB->setEditable(true);
+        C3_blendingRangeFB->setFixedSize(Vector2i(70, 20));
+        C3_blendingRangeFB->setValue(0.03f);
+        C3_blendingRangeFB->setUnits("uf");
+        C3_blendingRangeFB->setDefaultValue("0.03");
+        C3_blendingRangeFB->setFontSize(16);
+        C3_blendingRangeFB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+        C3_blendingRangeFB->setFormat("[0-9]*\\.?[0-9]+");
+        C3_blendingRangeFB->setSpinnable(true);
+        C3_blendingRangeFB->setMinValue(0);
+        C3_blendingRangeFB->setValueIncrement(0.01f);
+        C3_blendingRangeFB->setCallback([this](float value) { mCanvas->setColorBlendingRange(3, value); return true; }); 
+
+        new Label(colorsWidget, "Color 4:", "sans-bold");
+        auto CP4 = new ColorPicker(colorsWidget, Color(0.5f, 0.2f, 0.0f, 1.0f));
         CP4->setFixedSize({100, 20});
-        CP4->setFinalCallback([this](const Color &c) { mCanvas->setHeightColor(4, vec3(c.r(), c.g(), c.b())); });
+        CP4->setFinalCallback([this](const Color &c) { mCanvas->setColor(4, vec3(c.r(), c.g(), c.b())); });
+        new Label(colorsWidget, "* rocks *", "sans-bold");//dummy
+        new Label(colorsWidget, " ", "sans-bold");//dummy
 
+        Button *btn = new Button(window, "RandomizeColors");
+        btn->setCallback([this, CP0, CP1, CP2, CP3, CP4]() { 
+            Color c;
+            CP0->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
+            c = CP0->color();
+            mCanvas->setColor(0, vec3(c.r(), c.g(), c.b()));
+            CP1->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
+            c = CP1->color();
+            mCanvas->setColor(1, vec3(c.r(), c.g(), c.b()));
+            CP2->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
+            c = CP2->color();
+            mCanvas->setColor(2, vec3(c.r(), c.g(), c.b()));
+            CP3->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
+            c = CP3->color();
+            mCanvas->setColor(3, vec3(c.r(), c.g(), c.b()));
+            CP4->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
+            c = CP4->color();
+            mCanvas->setColor(4, vec3(c.r(), c.g(), c.b()));
+            
+        });
+
+
+        Widget *steepnessWidget = new Widget(window);
+        steepnessWidget->setLayout(new GridLayout(Orientation::Horizontal, 2 , Alignment::Minimum, 0, 5));
+        
         /* offset */ 
-        new Label(window, "Steepness threshold *:", "sans");
-        auto steepnesFB = new FloatBox<float>(window);
+        new Label(steepnessWidget, "Steepness threshold *:", "sans");
+        auto steepnesFB = new FloatBox<float>(steepnessWidget);
         steepnesFB->setEditable(true);
         steepnesFB->setFixedSize(Vector2i(70, 20));
         steepnesFB->setValue(0.9f);
@@ -650,8 +804,8 @@ private:
         steepnesFB->setCallback([this](float value) { mCanvas->setSteepnessThreshold(value); return true; });    
 
         /* rock blending factor */ 
-        new Label(window, "rock blending factor:", "sans");
-        auto rockBlendFactorFB = new FloatBox<float>(window);
+        new Label(steepnessWidget, "rock blending factor:", "sans");
+        auto rockBlendFactorFB = new FloatBox<float>(steepnessWidget);
         rockBlendFactorFB->setEditable(true);
         rockBlendFactorFB->setFixedSize(Vector2i(70, 20));
         rockBlendFactorFB->setValue(0.04f);
@@ -667,8 +821,8 @@ private:
         rockBlendFactorFB->setCallback([this](float value) { mCanvas->setRockBlendingFactor(value); return true; });    
 
         /* normal map scale */ 
-        new Label(window, "nMap scale factor:", "sans");
-        auto nMapScaleFactorFB = new FloatBox<float>(window);
+        new Label(steepnessWidget, "nMap scale factor:", "sans");
+        auto nMapScaleFactorFB = new FloatBox<float>(steepnessWidget);
         nMapScaleFactorFB->setEditable(true);
         nMapScaleFactorFB->setFixedSize(Vector2i(70, 20));
         nMapScaleFactorFB->setValue(1.0f);
@@ -682,30 +836,136 @@ private:
         //nMapScaleFactorFB->setMaxValue(1);
         nMapScaleFactorFB->setValueIncrement(0.1f);
         nMapScaleFactorFB->setCallback([this](float value) { mCanvas->setNormalMapScale(value); return true; });    
+        
+        auto commentLabel = new Label(window, "*** there is a bug with normal map texture: the wrapipng is incorrect - there are artifacts", "sans");
+        commentLabel->setColor(Color(1.0f, 1.0f, 0.0f, 1.0f));
 
-
-        Button *btn = new Button(window, "RandomizeColors");
-        btn->setCallback([this, CP0, CP1, CP2, CP3, CP4]() { 
-            Color c;
-            CP0->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
-            c = CP0->color();
-            mCanvas->setHeightColor(0, vec3(c.r(), c.g(), c.b()));
-            CP1->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
-            c = CP1->color();
-            mCanvas->setHeightColor(1, vec3(c.r(), c.g(), c.b()));
-            CP2->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
-            c = CP2->color();
-            mCanvas->setHeightColor(2, vec3(c.r(), c.g(), c.b()));
-            CP3->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
-            c = CP3->color();
-            mCanvas->setHeightColor(3, vec3(c.r(), c.g(), c.b()));
-            CP4->setColor(Color((float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, (float)(rand() % 1000) / 1000, 1.0f));
-            c = CP4->color();
-            mCanvas->setHeightColor(4, vec3(c.r(), c.g(), c.b()));
-            
-        });
 
     }
+
+
+void createPostProcessingWindow() {
+
+    Widget *window = new Window(this, "Post Processing Kernel");
+    window->setPosition(Vector2i(500, 800));
+    window->setLayout(new GridLayout(Orientation::Horizontal, 1 , Alignment::Minimum, 0, 5));
+
+    Button *b1 = new Button(window, "Use PostProcessing Kernel");
+    b1->setFlags(Button::ToggleButton);
+    b1->setPushed(false);
+    b1->setChangeCallback([this](bool state) { mCanvas->togglePostProc(state); });
+
+    Widget *matrixWidget = new Widget(window);
+    matrixWidget->setLayout(new GridLayout(Orientation::Horizontal, 3 , Alignment::Minimum, 0, 5));
+    
+/* offset */ 
+    auto    mat_00_FB = new FloatBox<float>(matrixWidget);
+    mat_00_FB->setEditable(true);
+    mat_00_FB->setFixedSize(Vector2i(70, 20));
+    mat_00_FB->setValue(0.0f);
+    mat_00_FB->setUnits("f");
+    mat_00_FB->setDefaultValue("0.0");
+    mat_00_FB->setFontSize(16);
+    mat_00_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_00_FB->setCallback([this](float value) { return true; });    
+
+
+    auto    mat_01_FB = new FloatBox<float>(matrixWidget);
+    mat_01_FB->setEditable(true);
+    mat_01_FB->setFixedSize(Vector2i(70, 20));
+    mat_01_FB->setValue(0.0f);
+    mat_01_FB->setUnits("f");
+    mat_01_FB->setDefaultValue("0.0");
+    mat_01_FB->setFontSize(16);
+    mat_01_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_01_FB->setCallback([this](float value) { return true; });    
+
+    auto    mat_02_FB = new FloatBox<float>(matrixWidget);
+    mat_02_FB->setEditable(true);
+    mat_02_FB->setFixedSize(Vector2i(70, 20));
+    mat_02_FB->setValue(0.0f);
+    mat_02_FB->setUnits("f");
+    mat_02_FB->setDefaultValue("0.0");
+    mat_02_FB->setFontSize(16);
+    mat_02_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_02_FB->setCallback([this](float value) { return true; });    
+
+    auto    mat_10_FB = new FloatBox<float>(matrixWidget);
+    mat_10_FB->setEditable(true);
+    mat_10_FB->setFixedSize(Vector2i(70, 20));
+    mat_10_FB->setValue(0.0f);
+    mat_10_FB->setUnits("f");
+    mat_10_FB->setDefaultValue("0.0");
+    mat_10_FB->setFontSize(16);
+    mat_10_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_10_FB->setCallback([this](float value) { return true; });    
+
+
+    auto    mat_11_FB = new FloatBox<float>(matrixWidget);
+    mat_11_FB->setEditable(true);
+    mat_11_FB->setFixedSize(Vector2i(70, 20));
+    mat_11_FB->setValue(1.0f);
+    mat_11_FB->setUnits("f");
+    mat_11_FB->setDefaultValue("1.0");
+    mat_11_FB->setFontSize(16);
+    mat_11_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_11_FB->setCallback([this](float value) { return true; });    
+
+    auto    mat_12_FB = new FloatBox<float>(matrixWidget);
+    mat_12_FB->setEditable(true);
+    mat_12_FB->setFixedSize(Vector2i(70, 20));
+    mat_12_FB->setValue(0.0f);
+    mat_12_FB->setUnits("f");
+    mat_12_FB->setDefaultValue("0.0");
+    mat_12_FB->setFontSize(16);
+    mat_12_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_12_FB->setCallback([this](float value) { return true; });    
+
+    auto    mat_20_FB = new FloatBox<float>(matrixWidget);
+    mat_20_FB->setEditable(true);
+    mat_20_FB->setFixedSize(Vector2i(70, 20));
+    mat_20_FB->setValue(0.0f);
+    mat_20_FB->setUnits("f");
+    mat_20_FB->setDefaultValue("0.0");
+    mat_20_FB->setFontSize(16);
+    mat_20_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_20_FB->setCallback([this](float value) { return true; });    
+
+
+    auto    mat_21_FB = new FloatBox<float>(matrixWidget);
+    mat_21_FB->setEditable(true);
+    mat_21_FB->setFixedSize(Vector2i(70, 20));
+    mat_21_FB->setValue(0.0f);
+    mat_21_FB->setUnits("f");
+    mat_21_FB->setDefaultValue("0.0");
+    mat_21_FB->setFontSize(16);
+    mat_21_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_21_FB->setCallback([this](float value) { return true; });    
+
+    auto mat_22_FB = new FloatBox<float>(matrixWidget);
+    mat_22_FB->setEditable(true);
+    mat_22_FB->setFixedSize(Vector2i(70, 20));
+    mat_22_FB->setValue(0.0f);
+    mat_22_FB->setUnits("f");
+    mat_22_FB->setDefaultValue("0.0");
+    mat_22_FB->setFontSize(16);
+    mat_22_FB->setFormat("[-]?[0-9]*\\.?[0-9]+");
+    mat_22_FB->setCallback([this](float value) { return true; });    
+
+
+    Button *btn = new Button(window, "Set Kernel");
+    btn->setCallback([this, mat_00_FB, mat_01_FB, mat_02_FB, mat_10_FB, mat_11_FB, mat_12_FB, mat_20_FB, mat_21_FB, mat_22_FB]() { 
+        mCanvas->setPostProcKernel(
+            mat_00_FB->value(), mat_01_FB->value(), mat_02_FB->value(),
+            mat_10_FB->value(), mat_11_FB->value(), mat_12_FB->value(),
+            mat_20_FB->value(), mat_21_FB->value(), mat_22_FB->value()
+            );
+    });
+    
+    auto commentLabel = new Label(window, "*** there is a bug with texture: doesnt show the full image", "sans");
+    commentLabel->setColor(Color(1.0f, 1.0f, 0.0f, 1.0f));
+    }
+
 
     void createGLCanvas() {
         //GL Canvas window
@@ -725,6 +985,7 @@ public:
         createGLCanvas();
         createToolsWindow();
         createColorsWindow();
+        createPostProcessingWindow();
         
         performLayout();
     }

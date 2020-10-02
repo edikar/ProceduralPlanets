@@ -9,11 +9,22 @@ uniform vec3 lightPos;
 uniform vec3 viewPos; 
 uniform bool useHeightColor;
 
+//TODO: need to use an array of colors and heights
 uniform vec3 color0;
 uniform vec3 color1;
 uniform vec3 color2;
 uniform vec3 color3;
 uniform vec3 color4;
+
+uniform float colorHeight0;
+uniform float colorHeight1;
+uniform float colorHeight2;
+uniform float colorHeight3;
+
+uniform float colorBlendingRange1;
+uniform float colorBlendingRange2;
+uniform float colorBlendingRange3;
+
 
 uniform float steepnessThreshold;
 uniform float rockBlendingFactor;
@@ -96,22 +107,22 @@ void main()
 	float len = length(FragPos) * length(FragPos);
 
 	float steepnessInterpolationValue = smoothstep(clamp(steepnessThreshold - rockBlendingFactor, 0, 1), clamp(steepnessThreshold + rockBlendingFactor, 0, 1), steepness);
- 	if(len < 0.9){
- 		float f = clamp((0.9- len)  /(0.9 - 0.88) , 0 , 1);
+ 	if(len >= colorHeight0 && len < colorHeight1){
+ 		float f = clamp((colorHeight1 - len)  /(colorBlendingRange1) , 0 , 1);
  		vec3 c = f * color0 + (1-f)*color1;
  		finalColor = c * len; 					//bottom
  	}
- 	if(len >= 0.9 && len < 1.05){
- 		float f = clamp((1.05 - len)  /(1.05 - 1.02) , 0 , 1);
+ 	if(len >= colorHeight1 && len < colorHeight2){
+ 		float f = clamp((colorHeight2 - len)  /(colorBlendingRange2) , 0 , 1);
  		vec3 c = f * color1 + (1-f)*color2;
  		finalColor = steepnessInterpolationValue * c + (1 - steepnessInterpolationValue)*color4;
  	}
- 	if(len >= 1.05 && len < 1.2){
- 		float f = clamp((1.2 - len)  /(1.2 - 1.18) , 0 , 1);
+ 	if(len >= colorHeight2 && len < colorHeight3){
+ 		float f = clamp((colorHeight3 - len)  /(colorBlendingRange3) , 0 , 1);
  		vec3 c = f * color2 + (1-f)*color3;
  		finalColor = steepnessInterpolationValue * c + (1 - steepnessInterpolationValue)*color4;
  	}
- 	if(len >= 1.2){
+ 	if(len >= colorHeight3){
  		finalColor = steepnessInterpolationValue * color3 + (1 - steepnessInterpolationValue)*color4;
  	}
  	

@@ -144,8 +144,18 @@ void Planet::setRidgeNoiseOffset(float value){
     initializePlanet();
 }
 
-void Planet::setHeightColor(int colNum, vec3 color){
-    heightColors[colNum] = color;
+void Planet::setColor(int colNum, vec3 color){
+    colors[colNum] = color;
+    initializePlanet();
+}
+
+void Planet::setColorHeight(int colNum, float height){
+    colorHeights[colNum] = height;
+    initializePlanet();
+}
+
+void Planet::setColorBlendingRange(int colNum, float range){
+    colorBlendingRanges[colNum] = range;
     initializePlanet();
 }
 
@@ -169,9 +179,27 @@ void Planet::setNormalMapScale(float value){
     initializePlanet();
 }
 
+void Planet::togglePostProc(bool state){
+    usePostProc = state;
+}
+
 void Planet::setViewport(unsigned int vx, unsigned int vy){
     VIEWPORT_X = vx;
     VIEWPORT_Y = vy;
+}
+
+void Planet::setPostProcKernel(float m00, float m01, float m02, float m10, float m11, float m12, float m20, float m21, float m22){
+    postProcKernel[0][0] = m00;
+    postProcKernel[0][1] = m01;
+    postProcKernel[0][2] = m02;
+
+    postProcKernel[1][0] = m10;
+    postProcKernel[1][1] = m11;
+    postProcKernel[1][2] = m12;
+
+    postProcKernel[2][0] = m20;
+    postProcKernel[2][1] = m21;
+    postProcKernel[2][2] = m22;
 }
 
 int Planet::randomizePlanet(int detalization){
@@ -439,9 +467,6 @@ void Planet::initializePlanet()
     applyNoise();
 
 
-    glGenBuffers(1, &sphereVBO);
-    glGenBuffers(1, &sphereEBO);
-    glGenVertexArrays(1, &sphereVAO);
 
     glBindVertexArray(sphereVAO);
     glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
@@ -455,9 +480,6 @@ void Planet::initializePlanet()
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glGenBuffers(1, &oceanVBO);
-    glGenBuffers(1, &oceanEBO);
-    glGenVertexArrays(1, &oceanVAO);
 
     glBindVertexArray(oceanVAO);
     glBindBuffer(GL_ARRAY_BUFFER, oceanVBO);
@@ -473,8 +495,6 @@ void Planet::initializePlanet()
     glEnableVertexAttribArray(1);
 
 
-    glGenBuffers(1, &normalsVBO);
-    glGenVertexArrays(1, &normalsVAO);
 
     glBindVertexArray(normalsVAO);
     glBindBuffer(GL_ARRAY_BUFFER, normalsVBO);
@@ -494,9 +514,7 @@ void Planet::initializePlanet()
         -1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
     };
 
-    glGenVertexArrays(1, &quadVAO);
 
-    glGenBuffers(1, &quadVBO);
     glBindVertexArray(quadVAO);
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(plane), &plane, GL_STATIC_DRAW);
@@ -508,11 +526,10 @@ void Planet::initializePlanet()
 
     //BUFFER FOR POST PROCESSING
     //generate FBO
-    glGenFramebuffers(1, &framebuffer);
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);   
     // generate texture
-    glGenTextures(1, &texColorBuffer);
     glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+
     printf("VIEWPORT_X = %d VIEWPORT_Y = %d\n",VIEWPORT_X, VIEWPORT_Y );
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, VIEWPORT_X, VIEWPORT_Y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -522,7 +539,6 @@ void Planet::initializePlanet()
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
 
     //create render buffer object for depth and stencil buffers
-    glGenRenderbuffers(1, &rbo);
     glBindRenderbuffer(GL_RENDERBUFFER, rbo); 
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, VIEWPORT_X, VIEWPORT_Y);  
     glBindRenderbuffer(GL_RENDERBUFFER, 0);
@@ -567,32 +583,42 @@ void Planet::setupDrawParameters(){
 }
 
 void Planet::drawPlanet(){
-        // activate shader
-        planetShader->use();
-        planetShader->setVec3("objectColor", glm::vec3(0.4f, 0.4f, 0.4f));
-        planetShader->setVec3("lightColor",  glm::vec3(1.0f, 1.0f, 1.0f));
-        planetShader->setVec3("lightPos", lightPos);
-        planetShader->setVec3("viewPos", camera->Position);   
+    // activate shader
+    planetShader->use();
+    planetShader->setVec3("objectColor", glm::vec3(0.4f, 0.4f, 0.4f));
+    planetShader->setVec3("lightColor",  glm::vec3(1.0f, 1.0f, 1.0f));
+    planetShader->setVec3("lightPos", lightPos);
+    planetShader->setVec3("viewPos", camera->Position);   
 
-        // set the model, view and projection matrix uniforms
-        planetShader->setMat4("model", model);
-        planetShader->setMat4("view", view);
-        planetShader->setMat4("projection", projection);
-        planetShader->setMat4("normalMat", normalMat);
+    // set the model, view and projection matrix uniforms
+    planetShader->setMat4("model", model);
+    planetShader->setMat4("view", view);
+    planetShader->setMat4("projection", projection);
+    planetShader->setMat4("normalMat", normalMat);
 
-        planetShader->setVec3("color0", heightColors[0]);
-        planetShader->setVec3("color1", heightColors[1]);
-        planetShader->setVec3("color2", heightColors[2]);
-        planetShader->setVec3("color3", heightColors[3]);
-        planetShader->setVec3("color4", heightColors[4]);
+    planetShader->setVec3("color0", colors[0]);
+    planetShader->setVec3("color1", colors[1]);
+    planetShader->setVec3("color2", colors[2]);
+    planetShader->setVec3("color3", colors[3]);
+    planetShader->setVec3("color4", colors[4]);
 
-        planetShader->setFloat("steepnessThreshold", steepnessThreshold);
-        planetShader->setFloat("rockBlendingFactor", rockBlendingFactor);
-        planetShader->setFloat("normalMapScale", normalMapScale);
+    planetShader->setFloat("colorHeight0", colorHeights[0]);
+    planetShader->setFloat("colorHeight1", colorHeights[1]);
+    planetShader->setFloat("colorHeight2", colorHeights[2]);
+    planetShader->setFloat("colorHeight3", colorHeights[3]);
+    planetShader->setFloat("colorHeight4", colorHeights[4]);
 
-        glBindVertexArray(sphereVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-        glDrawElements(GL_TRIANGLES, NUM_FACES * sizeof(FACE), GL_UNSIGNED_INT, 0);
+    planetShader->setFloat("colorBlendingRange1", colorBlendingRanges[1]);
+    planetShader->setFloat("colorBlendingRange2", colorBlendingRanges[2]);
+    planetShader->setFloat("colorBlendingRange3", colorBlendingRanges[3]);
+
+    planetShader->setFloat("steepnessThreshold", steepnessThreshold);
+    planetShader->setFloat("rockBlendingFactor", rockBlendingFactor);
+    planetShader->setFloat("normalMapScale", normalMapScale);
+
+    glBindVertexArray(sphereVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+    glDrawElements(GL_TRIANGLES, NUM_FACES * sizeof(FACE), GL_UNSIGNED_INT, 0);
 
 }
 
@@ -640,7 +666,14 @@ void Planet::planetDraw(){
 
     setupDrawParameters();
     
-    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    if(usePostProc)
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+    else
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glClearColor(0.0f, 0.7f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, normalMap);  
 
@@ -665,18 +698,22 @@ void Planet::planetDraw(){
         drawNormals();
 
     
-    //NOW POST-PROCESS the image
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    // plane VAO
-    postProcessingShader->use();
-    glClearColor(0.1f, 0.7f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glBindVertexArray(quadVAO);
-    glDisable(GL_DEPTH_TEST);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texColorBuffer);
-    glDrawArrays(GL_TRIANGLES, 0, 6); 
+    if(usePostProc){
+        //NOW POST-PROCESS the image
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+        // plane VAO
+        postProcessingShader->use();    
+        postProcessingShader->setMat3("postProcKernel", postProcKernel);
+    
+        glClearColor(0.1f, 0.7f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glBindVertexArray(quadVAO);
+        glDisable(GL_DEPTH_TEST);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+        glDrawArrays(GL_TRIANGLES, 0, 6); 
+    }
 }
 
 void showFrameRate(){
@@ -755,6 +792,20 @@ Planet::Planet() {
     perlinSeed = 1;
     printf("perlinSeed = %d\n", perlinSeed);
 
+    glGenBuffers(1, &sphereVBO);
+    glGenBuffers(1, &sphereEBO);
+    glGenVertexArrays(1, &sphereVAO);
+    glGenBuffers(1, &oceanVBO);
+    glGenBuffers(1, &oceanEBO);
+    glGenVertexArrays(1, &oceanVAO);
+    glGenBuffers(1, &normalsVBO);
+    glGenVertexArrays(1, &normalsVAO);
+    glGenVertexArrays(1, &quadVAO);
+    glGenBuffers(1, &quadVBO);
+    glGenFramebuffers(1, &framebuffer);
+    glGenTextures(1, &texColorBuffer);
+    glGenRenderbuffers(1, &rbo);
+
     detalization = 5;
 
     shapeNoiseLayers = 0;
@@ -780,15 +831,30 @@ Planet::Planet() {
     detNoiseAmplitude = 0.3f;
     detNoiseOffset = 0.0f;
 
-    heightColors[0] = vec3(0, 0, 0.1f);
-    heightColors[1] = vec3(0.6, 0.6, 0.1f);
-    heightColors[2] = vec3(0.1, 0.5, 0.1f);
-    heightColors[3] = vec3(1.0, 1.0, 1.0f);
-    heightColors[4] = vec3(0.5, 0.2, 0.0f);
+    colors[0] = vec3(0, 0, 0.1f);
+    colors[1] = vec3(0.6, 0.6, 0.1f);
+    colors[2] = vec3(0.1, 0.5, 0.1f);
+    colors[3] = vec3(1.0, 1.0, 1.0f);
+    colors[4] = vec3(0.5, 0.2, 0.0f);
+
+    colorHeights[0] = 0.0;
+    colorHeights[1] = 0.9;
+    colorHeights[2] = 1.05;
+    colorHeights[3] = 1.2;
+    colorHeights[4] = 0.0; // not used
+
+    colorBlendingRanges[0] = 0.0; // not used
+    colorBlendingRanges[1] = 0.03;
+    colorBlendingRanges[2] = 0.03;
+    colorBlendingRanges[3] = 0.03;
+    colorBlendingRanges[4] = 0.0; // not used
 
     steepnessThreshold = 0.9f;
     rockBlendingFactor = 0.04f;
     normalMapScale = 1.0f;
+
+    postProcKernel = glm::mat3(0.0);
+    postProcKernel[1][1] = 1.0;
 
     initializePlanet();
 }
@@ -801,7 +867,6 @@ Planet::Planet() {
 unsigned int loadTexture(char const * path)
 {
     unsigned int textureID;
-    glGenTextures(1, &textureID);
 
     int width, height, nrComponents;
     unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);

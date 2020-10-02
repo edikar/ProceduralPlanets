@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 
 using glm::vec3;
+using glm::mat3 ;
 using glm::mat4;
 
 typedef struct {
@@ -55,7 +56,9 @@ public:
 	void processInput(int,int);
 	void setDetalization(int);
 	void setNoiseSeed(int);
-	void setHeightColor(int, vec3);
+	void setColor(int, vec3);
+	void setColorHeight(int, float);
+	void setColorBlendingRange(int, float);
 	void setSteepnessThreshold(float);
 	void setRockBlendingFactor(float);
 	void setNormalMapScale(float);
@@ -87,6 +90,9 @@ public:
 	void setDetNoiseOffset(float);
 
 	void setViewport(unsigned int, unsigned int);
+	void setPostProcKernel(float,float,float,float,float,float,float,float,float);
+	void togglePostProc(bool);
+
 private:
 
 	//matrices
@@ -113,19 +119,20 @@ private:
 	unsigned int sphereVBO, sphereVAO, sphereEBO;
 	unsigned int oceanVBO, oceanVAO, oceanEBO;
 	unsigned int normalsVBO, normalsVAO;
+	unsigned int normalMap;
 
 	//POST-PROCESSING
 	unsigned int framebuffer;
 	unsigned int rbo;
     unsigned int texColorBuffer;
     unsigned int quadVAO, quadVBO;
-
-	unsigned int normalMap;
+    mat3 postProcKernel;
 
 	//controls
 	bool showNormals = 0;
 	bool showOcean = 1;
 	bool showWireframe = 0;
+	bool usePostProc = 0;
 	//planet generation parameters
 	int  detalization;
 	int perlinSeed;
@@ -157,7 +164,9 @@ private:
 	float detNoiseOffset;
 
 	//height colors
-	vec3 heightColors[5];
+	vec3 colors[5];
+	float colorHeights[5];
+	float colorBlendingRanges[5];
 	float steepnessThreshold;
 	float rockBlendingFactor;
 	float normalMapScale;
