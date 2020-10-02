@@ -30,29 +30,37 @@ in vec3 Normal;
 out vec4 FragColor;
 
 vec3 getNormalMap(){
-
-/*
-	// This code used for tri-plana mapping, which is ok, but has some stretching... probably a bug.
+/* 
+float blendSharpness = 1;
+	// This code used for tri-planar mapping, which is ok, but has some stretching... probably my bug.
  	vec3 blending = abs( Normal );
 	blending = normalize(pow(max(blending, 0.00001), vec3(blendSharpness))); // Force weights to sum to 1.0
 	float b = (blending.x + blending.y + blending.z);
 	blending /= vec3(b, b, b);
 
 
-	vec3 xaxis = texture2D( normalMap, origFrag.zy * textureScale).rgb;
-	vec3 yaxis = texture2D( normalMap, origFrag.xz * textureScale).rgb;
-	vec3 zaxis = texture2D( normalMap, origFrag.xy * textureScale).rgb;
+	vec3 xaxis = texture2D( normalMap, origFrag.zy * normalMapScale).rgb;
+	vec3 yaxis = texture2D( normalMap, origFrag.xz * normalMapScale).rgb;
+	vec3 zaxis = texture2D( normalMap, origFrag.xy * normalMapScale).rgb;
 
 	// blend the results of the 3 planar projections.
 	vec3 normal = xaxis * blending.x + yaxis * blending.y + zaxis * blending.z;
-
+	return normalize(normal);
+  
  */
 
- 	
-	float phy = atan(origFrag.x/origFrag.z); 
+/*  float phy = 0.5 + atan(origFrag.x, origFrag.z) / 6.28318531; 
+ float theta = 0.5 - acos(origFrag.y) / 3.14159265;
+ vec3 normal = 	texture2D( normalMap, vec2(phy, theta) * normalMapScale).rgb;
+ return normalize(normal * 2.0 - 1.0);
+ */
+
+ 	//This is not the correct way to map 2d texture on a sphere, but it works better than the attempts above :D
+ 	float phy = atan(origFrag.x/origFrag.z); 
 	float theta = acos(origFrag.y);
-	vec3 normal = 	texture2D( normalMap, vec2(phy, theta) * normalMapScale).rgb;
-	return normalize(normal * 2.0 - 1.0);
+	vec3 normal = texture2D( normalMap, vec2(phy, theta) * normalMapScale).rgb;
+	return normalize(normal * 2.0 - 1.0); 
+ 
 }
 
 void main()
@@ -87,17 +95,25 @@ void main()
 	float steepness = dot(normal, nfp);
 	float len = length(FragPos) * length(FragPos);
 
-	float interpolationValue = smoothstep(clamp(steepnessThreshold - rockBlendingFactor, 0, 1), clamp(steepnessThreshold + rockBlendingFactor, 0, 1), steepness);
-	
- 	finalColor += (len <= 0.9) ? color0 * len : vec3(0.0); 					//bottom
-
-
- 	vec3 c = interpolationValue * color1 + (1 - interpolationValue)*color4;
- 	finalColor += (len >= 0.9 && len < 1.02) ? c : vec3(0.0);			//sand
- 	c = interpolationValue * color2 + (1 - interpolationValue)*color4;
- 	finalColor += (len >= 1.02 && len < 1.2) ? c : vec3(0.0);			//grass
- 	c = interpolationValue * color3 + (1 - interpolationValue)*color4;
- 	finalColor += (len >= 1.2) ? c : vec3(0.0);			//snow
+	float steepnessInterpolationValue = smoothstep(clamp(steepnessThreshold - rockBlendingFactor, 0, 1), clamp(steepnessThreshold + rockBlendingFactor, 0, 1), steepness);
+ 	if(len < 0.9){
+ 		float f = clamp((0.9- len)  /(0.9 - 0.88) , 0 , 1);
+ 		vec3 c = f * color0 + (1-f)*color1;
+ 		finalColor = c * len; 					//bottom
+ 	}
+ 	if(len >= 0.9 && len < 1.05){
+ 		float f = clamp((1.05 - len)  /(1.05 - 1.02) , 0 , 1);
+ 		vec3 c = f * color1 + (1-f)*color2;
+ 		finalColor = steepnessInterpolationValue * c + (1 - steepnessInterpolationValue)*color4;
+ 	}
+ 	if(len >= 1.05 && len < 1.2){
+ 		float f = clamp((1.2 - len)  /(1.2 - 1.18) , 0 , 1);
+ 		vec3 c = f * color2 + (1-f)*color3;
+ 		finalColor = steepnessInterpolationValue * c + (1 - steepnessInterpolationValue)*color4;
+ 	}
+ 	if(len >= 1.2){
+ 		finalColor = steepnessInterpolationValue * color3 + (1 - steepnessInterpolationValue)*color4;
+ 	}
  	
     vec3 result = (ambient + diffuse + specular) * finalColor;
     

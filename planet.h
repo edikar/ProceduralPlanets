@@ -86,6 +86,7 @@ public:
 	void setDetNoiseAmplitude(float);
 	void setDetNoiseOffset(float);
 
+	void setViewport(unsigned int, unsigned int);
 private:
 
 	//matrices
@@ -93,15 +94,16 @@ private:
 	mat4 view;
 	mat4 projection;
 	mat4 normalMat;
-	// settings
-	const unsigned int SCR_WIDTH = 800;
-	const unsigned int SCR_HEIGHT = 600;
+	// viewport
+	unsigned int VIEWPORT_X = 1000;
+	unsigned int VIEWPORT_Y = 800;
 	// camera
 	Camera *camera;
 	//shaders	
 	Shader *planetShader;
 	Shader *oceanShader;;
 	Shader *normalsShader;
+	Shader *postProcessingShader;
 	// timing
 	float deltaTime = 0.0f;	// time between current frame and last frame
 	float lastFrame = 0.0f;
@@ -111,6 +113,12 @@ private:
 	unsigned int sphereVBO, sphereVAO, sphereEBO;
 	unsigned int oceanVBO, oceanVAO, oceanEBO;
 	unsigned int normalsVBO, normalsVAO;
+
+	//POST-PROCESSING
+	unsigned int framebuffer;
+	unsigned int rbo;
+    unsigned int texColorBuffer;
+    unsigned int quadVAO, quadVBO;
 
 	unsigned int normalMap;
 

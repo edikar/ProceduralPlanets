@@ -169,6 +169,11 @@ void Planet::setNormalMapScale(float value){
     initializePlanet();
 }
 
+void Planet::setViewport(unsigned int vx, unsigned int vy){
+    VIEWPORT_X = vx;
+    VIEWPORT_Y = vy;
+}
+
 int Planet::randomizePlanet(int detalization){
     //update random seed
     perlinSeed = rand()/10000 % 10000;
@@ -478,6 +483,57 @@ void Planet::initializePlanet()
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    //POST PROCESSING PLANE
+    static float plane[] = {
+        // positions          // texture Coords
+        -1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
+         1.0f, -1.0f, 0.0f,  1.0f, 0.0f,
+         1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
+        -1.0f, -1.0f, 0.0f,  0.0f, 0.0f,
+         1.0f,  1.0f, 0.0f,  1.0f, 1.0f,
+        -1.0f,  1.0f, 0.0f,  0.0f, 1.0f,
+    };
+
+    glGenVertexArrays(1, &quadVAO);
+
+    glGenBuffers(1, &quadVBO);
+    glBindVertexArray(quadVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(plane), &plane, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
+    //BUFFER FOR POST PROCESSING
+    //generate FBO
+    glGenFramebuffers(1, &framebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);   
+    // generate texture
+    glGenTextures(1, &texColorBuffer);
+    glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+    printf("VIEWPORT_X = %d VIEWPORT_Y = %d\n",VIEWPORT_X, VIEWPORT_Y );
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, VIEWPORT_X, VIEWPORT_Y, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    // attach it to currently bound framebuffer object
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+
+    //create render buffer object for depth and stencil buffers
+    glGenRenderbuffers(1, &rbo);
+    glBindRenderbuffer(GL_RENDERBUFFER, rbo); 
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, VIEWPORT_X, VIEWPORT_Y);  
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+    //check if frame buffer was successfully created
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0); 
+
+
     //free malloced arrays
     delete[] faces;
     delete[] vertices;
@@ -584,6 +640,7 @@ void Planet::planetDraw(){
 
     setupDrawParameters();
     
+    glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, normalMap);  
 
@@ -597,7 +654,7 @@ void Planet::planetDraw(){
     //create model, view and projection matrices
     model = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime()/10, glm::vec3(0.0f, 1.0f, 0.0f));
     view = camera->GetViewMatrix();
-    projection = glm::perspective(glm::radians(camera->Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+    projection = glm::perspective(glm::radians(camera->Zoom), (float)VIEWPORT_X / (float)VIEWPORT_Y, 0.1f, 100.0f);
     normalMat = glm::transpose(glm::inverse(model));
 
     drawPlanet();
@@ -606,6 +663,20 @@ void Planet::planetDraw(){
         drawOcean();
     if(showNormals)
         drawNormals();
+
+    
+    //NOW POST-PROCESS the image
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    // plane VAO
+    postProcessingShader->use();
+    glClearColor(0.1f, 0.7f, 1.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindVertexArray(quadVAO);
+    glDisable(GL_DEPTH_TEST);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+    glDrawArrays(GL_TRIANGLES, 0, 6); 
 }
 
 void showFrameRate(){
@@ -671,9 +742,11 @@ Planet::Planet() {
     planetShader = new Shader("shaders/planetShader2.vs", "shaders/planetShader2.fs"/*, "shaders/planetShader2.gs"*/);
     oceanShader =  new Shader("shaders/oceanShader.vs", "shaders/oceanShader.fs"/*, "shaders/planetShader2.gs"*/);
     normalsShader = new Shader("shaders/normalsShader.vs", "shaders/normalsShader.fs"/*, "shaders/planetShader2.gs"*/);
+    postProcessingShader = new Shader("shaders/postProcessingShader.vs", "shaders/postProcessingShader.fs"/*, "shaders/planetShader2.gs"*/);
 
     //normalMap = loadTexture("images/planetNormalMap.png");
     normalMap = loadTexture("images/planetNormalMap_s.jpg");
+    //normalMap = loadTexture("../LearnOpenGL/LearnOpenGL/images/brickwall_normal.jpg");
     //normalMap = loadTexture("images/nums.png");
 
     camera = new Camera(glm::vec3(0.0f, 0.0f, 5.0f));

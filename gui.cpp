@@ -173,6 +173,9 @@ public:
         planet->setNormalMapScale(value);
     }
 
+    void setViewport(unsigned int vx, unsigned int vy){
+        planet->setViewport(vx,vy);
+    }
 private:
     Planet *planet;
 };
@@ -702,15 +705,8 @@ private:
             
         });
 
-
-
-
-
-
-
-
-
     }
+
     void createGLCanvas() {
         //GL Canvas window
         Window *window = new Window(this, "Procedural Planets");
