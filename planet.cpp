@@ -617,6 +617,10 @@ void Planet::drawPlanet(){
     planetShader->setFloat("normalMapScale", normalMapScale);
 
     glBindVertexArray(sphereVAO);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, normalMap);  
+
     glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
     glDrawElements(GL_TRIANGLES, NUM_FACES * sizeof(FACE), GL_UNSIGNED_INT, 0);
 
@@ -667,15 +671,11 @@ void Planet::planetDraw(){
     setupDrawParameters();
     
     if(usePostProc)
+        //draw to texture then postprocess
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
     else
+        //draw to screen
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    glClearColor(0.0f, 0.7f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, normalMap);  
 
     glClearColor(0.7f, 0.7f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
