@@ -24,3 +24,6 @@ Textures were taken from http://textures.com/
 ## 5. Screenshots
 <img src="https://github.com/edikar/ProceduralPlanets/blob/master/images/earth.png" height="50%" width="50%">
 <img src="https://github.com/edikar/ProceduralPlanets/blob/master/images/rock.png" height="50%" width="50%">
+
+## 6. Demo
+https://www.youtube.com/watch?v=_zn1CZvfswY
